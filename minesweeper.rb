@@ -67,12 +67,14 @@ class Board
         delta_y, delta_x = delta
         new_y = y + delta_y
         new_x = x + delta_x
-        if new_y.between?(0, @Y_DIM-1) && new_x.between?(0, @X_DIM-1)
-          neighbors << @grid[new_y][new_x]
-        end
+        neighbors << @grid[new_y][new_x] if valid_square?(new_y, new_x)
       end
 
       neighbors
+    end
+
+    def valid_square?(y, x)
+      y.between?(0, @Y_DIM-1) && x.between?(0, @X_DIM-1)
     end
 
 end

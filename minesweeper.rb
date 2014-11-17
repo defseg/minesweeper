@@ -1,3 +1,5 @@
+require 'yaml'
+
 class Tile
 
   attr_accessor :flagged, :bomb, :revealed
@@ -211,6 +213,12 @@ class Minesweeper
       user_action = :reveal
     elsif user_input[0] == 'f'
       user_action = :flag
+    elsif user_input[0] == 's'
+      puts "Name your game"
+      self.save(gets.chomp)
+    elsif user_input[0] == 'l'
+      puts "Which game would you like to load"
+      self.load_game(gets.chomp)
     else
       raise "Invalid input"
     end
@@ -266,5 +274,17 @@ class Minesweeper
     end
 
     nil
+  end
+
+  def save(name)
+    yaml_game = @board.to_yaml
+    File.open(name, "w") do |f|
+      f.puts yaml_game
+    end
+  end
+
+  def load_game(name)
+    yaml_game = File.read(name)
+    @board = YAML::load(yaml_game)
   end
 end

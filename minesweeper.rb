@@ -75,9 +75,10 @@ class Tile
 end
 
 class Board
-  attr_reader :grid
+  attr_reader :grid, :start_time
 
   def initialize
+    @start_time = Time.new
     @BOMBS = 10
     @X_DIM = 9
     @Y_DIM = 9
@@ -178,7 +179,6 @@ class Minesweeper
 
   def play
     game_over = false
-    start_time = Time.new
     until game_over
       user_input = get_user_input
       user_y, user_x = user_input[1]
@@ -198,7 +198,7 @@ class Minesweeper
     end
     end_time = Time.new
 
-    puts "You #{game_over.to_s} in #{end_time - start_time} seconds"
+    puts "You #{game_over.to_s} in #{end_time - @board.start_time} seconds"
     display_board_game_over
   end
 

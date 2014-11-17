@@ -1,3 +1,28 @@
+class Tile
+
+  attr_accessor :revealed, :number, :flagged, :bombed
+
+  def initialize(bombed)
+    @revealed = false
+    @number = nil
+    @flagged = false
+    @bombed = bombed
+  end
+
+  def flag
+    @flagged = true
+  end
+
+end
+
+class Board
+
+  def initialize
+
+  end
+
+end
+
 class Minesweeper
 
     def initialize
@@ -30,14 +55,23 @@ class Minesweeper
     end
 
     def execute_user_action(user_action, user_coordinates) # auto-decompose array
+      user_y, user_x = user_coordinates
       if user_action == :flag
-        #do flag function
-      else
-        #do reveal function
+        if @grid[user_y][user_x][0] == nil || @grid[user_y][user_x][0] == :bomb
+          @grid[user_y][user_x][1] = true
+        else
+          raise "Can't flag a numbered square"
+        end
+      elsif user_action == :reveal
+        reveal_square(user_y, user_x)
       end
     end
 
   private
+
+    def reveal_square(y, x)
+
+    end
 
     def seed_grid
       @BOMBS.times do

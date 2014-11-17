@@ -4,7 +4,7 @@ class Minesweeper
       @BOMBS = 10
       @X_DIM = 9
       @Y_DIM = 9
-      @grid = Array.new(@Y_DIM) { Array.new(@X_DIM) }
+      @grid = Array.new(@Y_DIM) { Array.new(@X_DIM) { [nil, false]} }
       seed_grid
     end
 
@@ -30,7 +30,11 @@ class Minesweeper
     end
 
     def execute_user_action(user_action, user_coordinates) # auto-decompose array
-
+      if user_action == :flag
+        #do flag function
+      else
+        #do reveal function
+      end
     end
 
   private

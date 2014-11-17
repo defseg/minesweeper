@@ -178,6 +178,7 @@ class Minesweeper
 
   def play
     game_over = false
+    start_time = Time.new
     until game_over
       user_input = get_user_input
       user_y, user_x = user_input[1]
@@ -186,17 +187,18 @@ class Minesweeper
         @board.flag_tile(user_input[1])
       elsif user_input[0] == :reveal
         did_player_lose = @board[user_input[1]].reveal_tile
-        game_over = :lose if did_player_lose == :lose
+        game_over = :lost if did_player_lose == :lose
       end
 
       unless game_over
-        game_over = :win if @board.won?
+        game_over = :won if @board.won?
       end
 
       # TODO write test on Board to see if the game is over and if it's won or lost
     end
+    end_time = Time.new
 
-    puts "You #{game_over.to_s}"
+    puts "You #{game_over.to_s} in #{end_time - start_time} seconds"
     display_board_game_over
   end
 

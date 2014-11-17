@@ -19,7 +19,7 @@ class Board
   attr_reader :grid
 
   def initialize
-    @BOMBS = 10
+    @BOMBS = 1
     @X_DIM = 9
     @Y_DIM = 9
     @grid = Array.new(@Y_DIM) { Array.new(@X_DIM) { Tile.new } }
@@ -57,6 +57,19 @@ class Board
         reveal_tile(neighbor_y, neighbor_x) unless @grid[neighbor_y][neighbor_x].flagged
       end
     end
+  end
+
+  def won?
+    # if there are no not-revealed tiles that are not bombs
+
+    won = true
+    @grid.each do |row|
+      row.each do |tile|
+        won = false if (!tile.revealed && !tile.bomb)
+      end
+    end
+
+    return won
   end
 
   private
@@ -117,10 +130,19 @@ class Minesweeper
       if user_input[0] == :flag
         @board.flag_tile(user_y, user_x)
       elsif user_input[0] == :reveal
-        @board.reveal_tile(user_y, user_x)
+        did_player_lose = @board.reveal_tile(user_y, user_x)
+        game_over = :lose if did_player_lose == :lose
       end
+
+      unless game_over
+        game_over = :win if @board.won?
+      end
+
       # TODO write test on Board to see if the game is over and if it's won or lost
     end
+
+    puts "You #{game_over.to_s}"
+    display_board_game_over
   end
 
   def get_user_input
@@ -166,7 +188,7 @@ class Minesweeper
           print "F"
         else
           if tile.bomb
-            print "*"
+            print "."
           else
             print "."
           end
@@ -176,7 +198,7 @@ class Minesweeper
     end
   end
 
-  def display_board_loss
+  def display_board_game_over
     board_array = @board.grid #to-do refactor this later
 
     board_array.each do |row|
@@ -193,5 +215,7 @@ class Minesweeper
       end
       puts ""
     end
+
+    nil
   end
 end

@@ -111,6 +111,10 @@ class Minesweeper
     @board = Board.new
   end
 
+  def play
+
+  end
+
   def get_user_input
     puts "Pick a square. Input your choice in the format row,column."
     puts "Prefix your choice with r to reveal or f to flag."
@@ -147,10 +151,10 @@ class Minesweeper
     board_array.each do |row|
       row.each do |tile|
         if tile.number
-          print tile.number
+          tile.number == 0 ? print "_" : print tile.number
         else
           if tile.bomb
-            print "."
+            print "*"
           else
             print "."
           end
@@ -166,10 +170,10 @@ class Minesweeper
     board_array.each do |row|
       row.each do |tile|
         if tile.number
-          print tile.number
+          tile.number == 0 ? print "_" : print tile.number
         else
           if tile.bomb
-            print "B"
+            print "*"
           else
             print "."
           end

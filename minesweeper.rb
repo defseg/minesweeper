@@ -1,24 +1,22 @@
 class Tile
 
-  attr_accessor :number, :flagged, :bomb
+  attr_accessor :number, :flagged, :bomb, :revealed
 
   def initialize
     @number = nil
     @flagged = false
     @bomb = false
-  end
-
-  def revealed?
-    !!@number
+    @revealed = false
   end
 
   def flag
-    @flagged = true
+    @flagged = !@flagged
   end
 
 end
 
 class Board
+  attr_reader :grid
 
   def initialize
     @BOMBS = 10
@@ -30,16 +28,16 @@ class Board
 
   def flag_tile(y, x)
     if @grid[y][x].number == nil || @grid[y][x].bomb
-      @grid[y][x].flagged = true
+      @grid[y][x].flag
     else
       raise "Can't flag a numbered square"
     end
   end
 
-  def reveal_square(y, x)
+  def reveal_tile(y, x)
     tile = @grid[y][x]
     # check if it's already been revealed
-    return :reveal if tile.revealed?
+    return :reveal if tile.revealed
 
     # check if it's a bomb
     return :lose if tile.bomb
@@ -52,10 +50,11 @@ class Board
     end
     # if it's zero, go through each adjacent tile and reveal_square it recursively
     tile.number = bomb_count
+    tile.revealed = true unless tile.flagged
     if bomb_count == 0
       neighbors.each do |neighbor|
         neighbor_y, neighbor_x = neighbor
-        reveal_square(neighbor_y, neighbor_x)
+        reveal_tile(neighbor_y, neighbor_x) unless @grid[neighbor_y][neighbor_x].flagged
       end
     end
   end
@@ -101,8 +100,6 @@ class Board
       y.between?(0, @Y_DIM-1) && x.between?(0, @X_DIM-1)
     end
 
-
-
 end
 
 class Minesweeper
@@ -112,19 +109,32 @@ class Minesweeper
   end
 
   def play
-
+    game_over = false
+    until game_over
+      user_input = get_user_input
+      user_y, user_x = user_input[1]
+      p user_input
+      if user_input[0] == :flag
+        @board.flag_tile(user_y, user_x)
+      elsif user_input[0] == :reveal
+        @board.reveal_tile(user_y, user_x)
+      end
+      # TODO write test on Board to see if the game is over and if it's won or lost
+    end
   end
 
   def get_user_input
+    puts "Board:"
+    display_board
     puts "Pick a square. Input your choice in the format row,column."
     puts "Prefix your choice with r to reveal or f to flag."
     #r3,7 or f0,0 etc.
 
     user_input = gets.chomp
 
-    if user_input[0] = 'r'
+    if user_input[0] == 'r'
       user_action = :reveal
-    elsif user_input[0] = 'f'
+    elsif user_input[0] == 'f'
       user_action = :flag
     else
       raise "Invalid input"
@@ -150,8 +160,10 @@ class Minesweeper
 
     board_array.each do |row|
       row.each do |tile|
-        if tile.number
-          tile.number == 0 ? print "_" : print tile.number
+        if tile.revealed
+          print tile.number == 0 ? "_" : tile.number
+        elsif tile.flagged
+          print "F"
         else
           if tile.bomb
             print "*"
@@ -170,7 +182,7 @@ class Minesweeper
     board_array.each do |row|
       row.each do |tile|
         if tile.number
-          tile.number == 0 ? print "_" : print tile.number
+          print tile.number == 0 ? "_" : tile.number
         else
           if tile.bomb
             print "*"

@@ -9,7 +9,7 @@ class Tile
   end
 
   def revealed?
-    !!@number   
+    !!@number
   end
 
   def flag
@@ -59,8 +59,20 @@ class Board
       end
     end
 
-    def get_adjacent_squares(y, x)
+    def get_neighbors(y, x)
+      DELTAS = [-1, 0, 1].repeated_permutation(2).to_a
 
+      neighbors = []
+      DELTAS.each do |delta|
+        delta_y, delta_x = delta
+        new_y = y + delta_y
+        new_x = x + delta_x
+        if new_y.between?(0, @Y_DIM-1) && new_x.between?(0, @X_DIM-1)
+          neighbors << @grid[new_y][new_x]
+        end
+      end
+
+      neighbors
     end
 
 end

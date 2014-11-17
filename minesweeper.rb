@@ -1,6 +1,6 @@
 class Tile
 
-  attr_accessor :flagged?, :bomb, :revealed
+  attr_accessor :flagged, :bomb, :revealed
 
 
   # the tile needs to know its coordinates
@@ -23,23 +23,29 @@ class Tile
   end
 
   def number
+    neighbors = get_neighbors(@position)
+    bomb_count = 0
+    neighbor_tiles(neighbors).each do |neighbor|
+      bomb_count += 1 if neighbor.bomb
+    end
+    bomb_count
+  end
+
+  def reveal_tile
     return :reveal if revealed
 
     # check if it's a bomb
     return :lose if bomb
 
     # if not, get its number
-    neighbors = get_neighbors(y, x)
-    bomb_count = 0
-    neighbor_tiles(neighbors).each do |neighbor|
-      bomb_count += 1 if neighbor.bomb
-    end
+
     # if it's zero, go through each adjacent tile and reveal_square it recursively
-    number = bomb_count
+
+    neighbors = get_neighbors(@position)
     revealed = true unless flagged
-    if bomb_count == 0
-      neighbors.each do |neighbor|
-        @board[neighbor].number unless @board[neighbor].flagged?
+    if self.number == 0
+      neighbor_tiles(neighbors).each do |neighbor|
+        neighbor.reveal_tile unless neighbor.flagged?
       end
     end
   end
@@ -50,8 +56,8 @@ class Tile
     neighbors = []
     deltas.each do |delta|
       delta_y, delta_x = delta
-      new_y = y + delta_y
-      new_x = x + delta_x
+      new_y = @position[0] + delta_y
+      new_x = @position[1] + delta_x
       neighbors << [new_y, new_x] if @board.valid_square?([new_y,new_x])
     end
 
@@ -60,7 +66,7 @@ class Tile
 
   def neighbor_tiles(coord_array)
     coord_array.map do |coords|
-      @grid[coords]
+      @board[coords]
     end
   end
 
@@ -119,7 +125,7 @@ class Board
     return won
   end
 
-  private
+  # private
 
     # def neighbor_tiles(coord_array)
     #   coord_array.map do |coords|
@@ -133,7 +139,7 @@ class Board
         until bomb_placed
           pos = [rand(@Y_DIM), rand(@X_DIM)]
           unless self[pos].bomb
-            @self[pos].bomb = true
+            self[pos].bomb = true
             bomb_placed = true
           end
         end
@@ -217,9 +223,9 @@ class Minesweeper
   def execute_user_action(user_action, user_coordinates) # auto-decompose array
     user_y, user_x = user_coordinates
     if user_action == :flag
-      @board.flag(user_y, user_x)
+      @board[user_coordinates].flag
     elsif user_action == :reveal
-      @board.reveal_square(user_y, user_x)
+      @board[user_coordinates].reveal
     end
   end
 

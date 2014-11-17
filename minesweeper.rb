@@ -19,16 +19,16 @@ class Minesweeper
       # a[0] should be r or f
       # split(',') everything else
 
-      if a[0] = 'r'
+      if user_input[0] = 'r'
         user_action = :reveal
-      elsif a[0] = 'f'
+      elsif user_input[0] = 'f'
         user_action = :flag
       else
         raise "Invalid input"
       end
 
       # TODO add error-checking to make sure the coords are valid
-      user_coordinates = a[1..-1].split(',').map(&:to_i)
+      user_coordinates = user_input[1..-1].split(',').map(&:to_i)
 
       [user_action, user_coordinates]
     end

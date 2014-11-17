@@ -11,13 +11,9 @@ class Minesweeper
     def get_user_input
       puts "Pick a square. Input your choice in the format row,column."
       puts "Prefix your choice with r to reveal or f to flag."
-
       #r3,7 or f0,0 etc.
 
       user_input = gets.chomp
-
-      # a[0] should be r or f
-      # split(',') everything else
 
       if user_input[0] = 'r'
         user_action = :reveal
@@ -33,7 +29,7 @@ class Minesweeper
       [user_action, user_coordinates]
     end
 
-    def check_user_input
+    def execute_user_action(user_action, user_coordinates) # auto-decompose array
 
     end
 

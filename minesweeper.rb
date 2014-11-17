@@ -1,16 +1,67 @@
 class Tile
 
-  attr_accessor :number, :flagged, :bomb, :revealed
+  attr_accessor :flagged?, :bomb, :revealed
 
-  def initialize
-    @number = nil
+
+  # the tile needs to know its coordinates
+  # and calculate its number on the fly
+
+  def flagged?
+    @flagged
+  end
+
+  def initialize(board, position)
     @flagged = false
     @bomb = false
     @revealed = false
+    @board = board
+    @position = position
   end
 
-  def flag
+  def toggle_flag
     @flagged = !@flagged
+  end
+
+  def number
+    return :reveal if revealed
+
+    # check if it's a bomb
+    return :lose if bomb
+
+    # if not, get its number
+    neighbors = get_neighbors(y, x)
+    bomb_count = 0
+    neighbor_tiles(neighbors).each do |neighbor|
+      bomb_count += 1 if neighbor.bomb
+    end
+    # if it's zero, go through each adjacent tile and reveal_square it recursively
+    number = bomb_count
+    revealed = true unless flagged
+    if bomb_count == 0
+      neighbors.each do |neighbor|
+        @board[neighbor].number unless @board[neighbor].flagged?
+      end
+    end
+  end
+
+  def get_neighbors(pos)
+    deltas = [-1, 0, 1].repeated_permutation(2).to_a
+
+    neighbors = []
+    deltas.each do |delta|
+      delta_y, delta_x = delta
+      new_y = y + delta_y
+      new_x = x + delta_x
+      neighbors << [new_y, new_x] if @board.valid_square?([new_y,new_x])
+    end
+
+    neighbors
+  end
+
+  def neighbor_tiles(coord_array)
+    coord_array.map do |coords|
+      @grid[coords]
+    end
   end
 
 end
@@ -22,41 +73,37 @@ class Board
     @BOMBS = 1
     @X_DIM = 9
     @Y_DIM = 9
-    @grid = Array.new(@Y_DIM) { Array.new(@X_DIM) { Tile.new } }
+    @grid = Array.new(@Y_DIM) { Array.new(@X_DIM) }
+    @grid.each_with_index do |row, y|
+      row.each_with_index do |cell, x|
+        self[[y, x]] = Tile.new(self, [y, x])
+      end
+    end
     seed_grid
   end
 
-  def flag_tile(y, x)
-    if @grid[y][x].number == nil || @grid[y][x].bomb
-      @grid[y][x].flag
+  def flag_tile(pos)
+    if self[pos].number.nil? || @grid[y][x].bomb
+      @grid[pos].toggle_flag
     else
       raise "Can't flag a numbered square"
     end
   end
 
+  def [](pos) # [0, 0]
+    y, x = pos
+    @grid[y][x]
+  end
+
+  def []=(pos, to_assign)
+    y, x = pos
+    @grid[y][x] = to_assign
+  end
+
   def reveal_tile(y, x)
     tile = @grid[y][x]
-    # check if it's already been revealed
-    return :reveal if tile.revealed
+    tile.number
 
-    # check if it's a bomb
-    return :lose if tile.bomb
-
-    # if not, get its number
-    neighbors = get_neighbors(y, x)
-    bomb_count = 0
-    neighbor_tiles(neighbors).each do |neighbor|
-      bomb_count += 1 if neighbor.bomb
-    end
-    # if it's zero, go through each adjacent tile and reveal_square it recursively
-    tile.number = bomb_count
-    tile.revealed = true unless tile.flagged
-    if bomb_count == 0
-      neighbors.each do |neighbor|
-        neighbor_y, neighbor_x = neighbor
-        reveal_tile(neighbor_y, neighbor_x) unless @grid[neighbor_y][neighbor_x].flagged
-      end
-    end
   end
 
   def won?
@@ -74,42 +121,41 @@ class Board
 
   private
 
-    def neighbor_tiles(coord_array)
-      coord_array.map do |coords|
-        new_y, new_x = coords
-        @grid[new_y][new_x]
-      end
-    end
+    # def neighbor_tiles(coord_array)
+    #   coord_array.map do |coords|
+    #     @grid[coords]
+    #   end
+    # end
 
     def seed_grid
       @BOMBS.times do
         bomb_placed = false
         until bomb_placed
-          y_loc = rand(@Y_DIM)
-          x_loc = rand(@X_DIM)
-          unless @grid[y_loc][x_loc].bomb
-            @grid[y_loc][x_loc].bomb = true
+          pos = [rand(@Y_DIM), rand(@X_DIM)]
+          unless self[pos].bomb
+            @self[pos].bomb = true
             bomb_placed = true
           end
         end
       end
     end
 
-    def get_neighbors(y, x)
-      deltas = [-1, 0, 1].repeated_permutation(2).to_a
+    # def get_neighbors(y, x)
+    #   deltas = [-1, 0, 1].repeated_permutation(2).to_a
+    #
+    #   neighbors = []
+    #   deltas.each do |delta|
+    #     delta_y, delta_x = delta
+    #     new_y = y + delta_y
+    #     new_x = x + delta_x
+    #     neighbors << [new_y, new_x] if valid_square?(new_y, new_x)
+    #   end
+    #
+    #   neighbors
+    # end
 
-      neighbors = []
-      deltas.each do |delta|
-        delta_y, delta_x = delta
-        new_y = y + delta_y
-        new_x = x + delta_x
-        neighbors << [new_y, new_x] if valid_square?(new_y, new_x)
-      end
-
-      neighbors
-    end
-
-    def valid_square?(y, x)
+    def valid_square?(pos)
+      y, x = pos
       y.between?(0, @Y_DIM-1) && x.between?(0, @X_DIM-1)
     end
 

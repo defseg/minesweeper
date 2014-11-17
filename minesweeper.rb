@@ -1,11 +1,11 @@
 class Tile
 
-  attr_accessor :number, :flagged, :bombed
+  attr_accessor :number, :flagged, :bomb
 
   def initialize
     @number = nil
     @flagged = false
-    @bombed = false
+    @bomb = false
   end
 
   def revealed?
@@ -29,7 +29,7 @@ class Board
   end
 
   def flag_tile(y, x)
-    if @grid[y][x].number == nil || @grid[y][x].bombed
+    if @grid[y][x].number == nil || @grid[y][x].bomb
       @grid[y][x].flagged = true
     else
       raise "Can't flag a numbered square"
@@ -37,13 +37,37 @@ class Board
   end
 
   def reveal_square(y, x)
+    tile = @grid[y][x]
     # check if it's already been revealed
+    return :reveal if tile.revealed?
+
     # check if it's a bomb
+    return :lose if tile.bomb
+
     # if not, get its number
+    neighbors = get_neighbors(y, x)
+    bomb_count = 0
+    neighbor_tiles(neighbors).each do |neighbor|
+      bomb_count += 1 if neighbor.bomb
+    end
     # if it's zero, go through each adjacent tile and reveal_square it recursively
+    tile.number = bomb_count
+    if bomb_count == 0
+      neighbors.each do |neighbor|
+        neighbor_y, neighbor_x = neighbor
+        reveal_square(neighbor_y, neighbor_x)
+      end
+    end
   end
 
   private
+
+    def neighbor_tiles(coord_array)
+      coord_array.map do |coords|
+        new_y, new_x = coords
+        @grid[new_y][new_x]
+      end
+    end
 
     def seed_grid
       @BOMBS.times do
@@ -51,8 +75,8 @@ class Board
         until bomb_placed
           y_loc = rand(@Y_DIM)
           x_loc = rand(@X_DIM)
-          unless @grid[y_loc][x_loc].bombed
-            @grid[y_loc][x_loc].bombed = true
+          unless @grid[y_loc][x_loc].bomb
+            @grid[y_loc][x_loc].bomb = true
             bomb_placed = true
           end
         end
@@ -60,14 +84,14 @@ class Board
     end
 
     def get_neighbors(y, x)
-      DELTAS = [-1, 0, 1].repeated_permutation(2).to_a
+      deltas = [-1, 0, 1].repeated_permutation(2).to_a
 
       neighbors = []
-      DELTAS.each do |delta|
+      deltas.each do |delta|
         delta_y, delta_x = delta
         new_y = y + delta_y
         new_x = x + delta_x
-        neighbors << @grid[new_y][new_x] if valid_square?(new_y, new_x)
+        neighbors << [new_y, new_x] if valid_square?(new_y, new_x)
       end
 
       neighbors
@@ -76,6 +100,8 @@ class Board
     def valid_square?(y, x)
       y.between?(0, @Y_DIM-1) && x.between?(0, @X_DIM-1)
     end
+
+
 
 end
 
@@ -112,6 +138,44 @@ class Minesweeper
       @board.flag(user_y, user_x)
     elsif user_action == :reveal
       @board.reveal_square(user_y, user_x)
+    end
+  end
+
+  def display_board
+    board_array = @board.grid #to-do refactor this later
+
+    board_array.each do |row|
+      row.each do |tile|
+        if tile.number
+          print tile.number
+        else
+          if tile.bomb
+            print "."
+          else
+            print "."
+          end
+        end
+      end
+      puts ""
+    end
+  end
+
+  def display_board_loss
+    board_array = @board.grid #to-do refactor this later
+
+    board_array.each do |row|
+      row.each do |tile|
+        if tile.number
+          print tile.number
+        else
+          if tile.bomb
+            print "B"
+          else
+            print "."
+          end
+        end
+      end
+      puts ""
     end
   end
 end

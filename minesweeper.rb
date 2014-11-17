@@ -23,7 +23,7 @@ class Tile
   end
 
   def number
-    neighbors = get_neighbors(@position)
+    neighbors = get_neighbors
     bomb_count = 0
     neighbor_tiles(neighbors).each do |neighbor|
       bomb_count += 1 if neighbor.bomb
@@ -41,16 +41,16 @@ class Tile
 
     # if it's zero, go through each adjacent tile and reveal_square it recursively
 
-    neighbors = get_neighbors(@position)
-    revealed = true unless flagged
+    neighbors = get_neighbors
+    @revealed = true unless flagged
     if self.number == 0
       neighbor_tiles(neighbors).each do |neighbor|
-        neighbor.reveal_tile unless neighbor.flagged?
+        neighbor.reveal_tile unless neighbor.flagged? || neighbor.revealed
       end
     end
   end
 
-  def get_neighbors(pos)
+  def get_neighbors
     deltas = [-1, 0, 1].repeated_permutation(2).to_a
 
     neighbors = []
@@ -76,7 +76,7 @@ class Board
   attr_reader :grid
 
   def initialize
-    @BOMBS = 1
+    @BOMBS = 10
     @X_DIM = 9
     @Y_DIM = 9
     @grid = Array.new(@Y_DIM) { Array.new(@X_DIM) }
@@ -89,8 +89,8 @@ class Board
   end
 
   def flag_tile(pos)
-    if self[pos].number.nil? || @grid[y][x].bomb
-      @grid[pos].toggle_flag
+    if !(self[pos].revealed) || self[pos].bomb
+      self[pos].toggle_flag
     else
       raise "Can't flag a numbered square"
     end
@@ -108,6 +108,7 @@ class Board
 
   def reveal_tile(y, x)
     tile = @grid[y][x]
+    tile.reveal_tile
     tile.number
 
   end
@@ -180,9 +181,9 @@ class Minesweeper
       user_y, user_x = user_input[1]
       p user_input
       if user_input[0] == :flag
-        @board.flag_tile(user_y, user_x)
+        @board.flag_tile(user_input[1])
       elsif user_input[0] == :reveal
-        did_player_lose = @board.reveal_tile(user_y, user_x)
+        did_player_lose = @board[user_input[1]].reveal_tile
         game_over = :lose if did_player_lose == :lose
       end
 
@@ -255,14 +256,10 @@ class Minesweeper
 
     board_array.each do |row|
       row.each do |tile|
-        if tile.number
-          print tile.number == 0 ? "_" : tile.number
+        if tile.bomb
+          print "*"
         else
-          if tile.bomb
-            print "*"
-          else
-            print "."
-          end
+          print tile.number == 0 ? "_" : tile.number
         end
       end
       puts ""

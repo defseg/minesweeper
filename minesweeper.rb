@@ -45,8 +45,8 @@ class Minesweeper
         until bomb_placed
           y_loc = rand(@Y_DIM)
           x_loc = rand(@X_DIM)
-          unless @grid[y_loc][x_loc]
-            @grid[y_loc][x_loc] = :bomb
+          unless @grid[y_loc][x_loc][0]
+            @grid[y_loc][x_loc][0] = :bomb
             bomb_placed = true
           end
         end
